@@ -1,20 +1,28 @@
 use std::collections::BTreeMap;
+use num::traits::{CheckedAdd, CheckedSub, Zero};
 
-pub type AccountId = String;
-pub type Balance = u128;
+
 
 #[derive(Debug)]
-pub struct Pallet {
+pub struct Pallet<AccountId, Balance>
+where
+	AccountId: Ord + Clone,
+	Balance: Zero + CheckedSub + CheckedAdd + Copy,
+{
 	balances: BTreeMap<AccountId, Balance>,
 }
 
-impl Pallet {
+impl<AccountId, Balance> Pallet<AccountId, Balance>
+where
+	AccountId: Ord + Clone,
+	Balance: Zero + CheckedSub + CheckedAdd + Copy + Ord,
+{
 	pub fn new() -> Self {
 		Self { balances: BTreeMap::new() }
 	}
 
-	pub fn get_balance(&self, who: &AccountId) -> u128 {
-		*self.balances.get(who).unwrap_or(&0)
+	pub fn get_balance(&self, who: &AccountId) -> Balance {
+		*self.balances.get(who).unwrap_or(&Zero::zero())
 	}
 
 	pub fn set_balance(&mut self, who: &AccountId, amount: Balance) {
@@ -29,8 +37,8 @@ impl Pallet {
 			return Err("Not enough funds.");
 		}
 
-		let new_who_balance = who_balance.checked_sub(amount).ok_or("Error: Overflow in subtracting balance")?;
-		let new_to_balance = to_balance.checked_add(amount).ok_or("Error: Overflow in adding balance")?;
+		let new_who_balance = who_balance.checked_sub(&amount).ok_or("Error: Overflow in subtracting balance")?;
+		let new_to_balance = to_balance.checked_add(&amount).ok_or("Error: Overflow in adding balance")?;
 
 		// Subtract Balance in sender
 		self.set_balance(who, new_who_balance);
@@ -48,10 +56,10 @@ mod tests {
 	#[test]
 	fn init_balances() {
 		/* TODO: Create a mutable variable `balances`, which is a new instance of `Pallet`. */
-		let mut balances = Pallet::new();
+		let mut balances = Pallet::<&'static str, u128>::new();
 
-		let alice = String::from("alice");
-		let bob = String::from("bob");
+		let alice = "alice";
+		let bob = "bob";
 
 		assert_eq!(balances.get_balance(&alice), 0);
 
@@ -64,9 +72,9 @@ mod tests {
 
     #[test]
 	fn transfer_balance() {
-        let mut balances = Pallet::new();
-		let alice = String::from("alice");
-		let bob = String::from("bob");
+        let mut balances = Pallet::<&'static str, u128>::new();
+		let alice = "alice";
+		let bob = "bob";
 
         balances.set_balance(&alice, 100);
         balances.set_balance(&bob, 0);
