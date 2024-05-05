@@ -6,7 +6,7 @@ mod system;
 #[derive(Debug)]
 pub struct Runtime {
     system: system::Pallet,
-    balances: balances::Pallet,
+    balances: balances::Pallet<String, u128>,
 }
 
 impl Runtime {
