@@ -5,9 +5,6 @@ use num::traits::{CheckedAdd, CheckedSub, Zero};
 
 #[derive(Debug)]
 pub struct Pallet<AccountId, Balance>
-where
-	AccountId: Ord + Clone,
-	Balance: Zero + CheckedSub + CheckedAdd + Copy,
 {
 	balances: BTreeMap<AccountId, Balance>,
 }
@@ -22,7 +19,7 @@ where
 	}
 
 	pub fn get_balance(&self, who: &AccountId) -> Balance {
-		*self.balances.get(who).unwrap_or(&Zero::zero())
+		*self.balances.get(who).unwrap_or(&Balance::zero())
 	}
 
 	pub fn set_balance(&mut self, who: &AccountId, amount: Balance) {

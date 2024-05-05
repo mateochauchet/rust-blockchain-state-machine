@@ -1,19 +1,22 @@
-use std::collections::BTreeMap;
-use crate::balances::AccountId;
-
-type BlockNumber = u32;
-type Nonce = u32;
+use std::{collections::BTreeMap, ops::AddAssign};
+use num::{ One, Zero };
 
 #[derive(Debug)]
-pub struct Pallet {
-    block_number: u32,
+pub struct Pallet<BlockNumber, Nonce, AccountId>
+{
+    block_number: BlockNumber,
     nonce: BTreeMap<AccountId, Nonce>
 }
 
-impl Pallet {
+impl<BlockNumber, Nonce, AccountId> Pallet<BlockNumber, Nonce, AccountId> 
+where
+    BlockNumber: Zero + One + AddAssign + Copy,
+    Nonce: Zero + One + Copy,
+    AccountId: Ord + Clone,
+{
     pub fn new() -> Self {
         Self{
-            block_number: 0,
+            block_number: BlockNumber::zero(),
             nonce: BTreeMap::new(),
         }
     }
@@ -23,11 +26,13 @@ impl Pallet {
     }
 
     pub fn inc_block_number(&mut self) {
-        self.block_number += 1;
+        self.block_number += BlockNumber::one();
     }
 
     pub fn inc_nonce(&mut self, who: &AccountId) {
-        *self.nonce.entry(who.to_string()).or_insert(0) += 1;
+        let nonce = *self.nonce.get(who).unwrap_or(&Nonce::zero());
+		let new_nonce = nonce + Nonce::one();
+		self.nonce.insert(who.clone(), new_nonce);
     }
 }
 
@@ -36,22 +41,26 @@ impl Pallet {
 mod test {
     use super::Pallet;
 
+    type TestAccountId = String;
+    type TestBlockNumber = u32;
+    type TestNonce = u32;
+
     #[test]
     fn initial_block_number() {
-        let systems = Pallet::new();
+        let systems = Pallet::<TestBlockNumber, TestNonce, TestAccountId>::new();
         assert_eq!(systems.block_number(), 0);
     }
 
     #[test]
     fn increment_block_number() {
-        let mut systems = Pallet::new();
+        let mut systems = Pallet::<TestBlockNumber, TestNonce, TestAccountId>::new();
         systems.inc_block_number();
         assert_eq!(systems.block_number(), 1);
     }
 
     #[test]
     fn increment_nonce() {
-        let mut systems = Pallet::new();
+        let mut systems = Pallet::<TestBlockNumber, TestNonce, TestAccountId>::new();
         systems.inc_nonce(&"alice".to_string());
         let nonce = systems.nonce.get("alice").unwrap();
         assert_eq!(*nonce, 1);
