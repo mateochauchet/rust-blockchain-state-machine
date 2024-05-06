@@ -1,11 +1,6 @@
 use std::{collections::BTreeMap, ops::AddAssign};
 use num::{ One, Zero };
 
-/*
-	TODO: Combine all generic types and their trait bounds into a single `pub trait Config`.
-	When you are done, your `Pallet` can simply be defined with `Pallet<T: Config>`.
-*/
-
 pub trait Config {
 	type AccountId: Ord + Clone;
 	type BlockNumber: Zero + One + AddAssign + Copy;

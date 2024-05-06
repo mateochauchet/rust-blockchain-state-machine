@@ -9,14 +9,13 @@ mod types {
 }
 
 impl system::Config for Runtime {
-	type AccountId = String;
-	type BlockNumber = u32;
-	type Nonce = u32;
+	type AccountId = types::AccountId;
+	type BlockNumber = types::BlockNumber;
+	type Nonce = types::Nonce;
 }
 
 impl balances::Config for Runtime {
-    type AccountId = String;
-    type Balance = u128;
+    type Balance = types::Balance;
 }
 
 // This is our main Runtime.
