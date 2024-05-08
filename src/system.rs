@@ -44,10 +44,6 @@ impl<T: Config> Pallet<T>
 mod test {
     use super::{Config, Pallet};
 
-    type TestAccountId = String;
-    type TestBlockNumber = u32;
-    type TestNonce = u32;
-
     struct TestConfig;
 
 

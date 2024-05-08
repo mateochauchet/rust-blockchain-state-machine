@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use num::traits::{CheckedAdd, CheckedSub, Zero};
 
-use crate::system;
+use crate::{support::DispatchResult, system};
 
 pub trait Config: system::Config {
 	type Balance: Zero + CheckedSub + CheckedAdd + Copy + Ord;
@@ -27,7 +27,7 @@ impl<T: Config> Pallet<T>
 		self.balances.insert(who.clone(), amount);
 	}
 
-	pub fn transfer(&mut self, who: &T::AccountId, to: &T::AccountId, amount: T::Balance) -> Result<(), &'static str> {
+	pub fn transfer(&mut self, who: &T::AccountId, to: &T::AccountId, amount: T::Balance) -> DispatchResult {
 		let who_balance = self.get_balance(who);
 		let to_balance = self.get_balance(to);
 
