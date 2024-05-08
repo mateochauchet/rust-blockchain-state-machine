@@ -85,33 +85,32 @@ impl support::Dispatch for Runtime {
 }
 
 fn main() {
-	/* TODO: Create a mutable variable `runtime`, which is a new instance of `Runtime`. */
-	/* TODO: Set the balance of `alice` to 100, allowing us to execute other transactions. */
-    let mut runtime = Runtime::new();
-    runtime.balances.set_balance(&"alice".to_string(), 100);
+	// Create a new instance of the Runtime.
+	// It will instantiate with it all the modules it uses.
+	let mut runtime = Runtime::new();
 
-	// start emulating a block
-	/* TODO: Increment the block number in system. */
-	/* TODO: Assert the block number is what we expect. */
-    runtime.system.inc_block_number();
-    assert_eq!(runtime.system.block_number(), 1);
+	let alice = "alice".to_string();
+	let bob = "bob".to_string();
+	let charlie = "charlie".to_string();
 
-	// first transaction
-	/* TODO: Increment the nonce of `alice`. */
-	/* TODO: Execute a transfer from `alice` to `bob` for 30 tokens.
-		- The transfer _could_ return an error. We should use `map_err` to print
-		  the error if there is one.
-		- We should capture the result of the transfer in an unused variable like `_res`.
-	*/
-    runtime.system.inc_nonce(&"alice".to_string());
-    let _res = runtime.balances.transfer(&"alice".to_string(), &"bob".to_string(), 30).map_err(|e| eprintln!("{}", e));
-    
-	// second transaction
-	/* TODO: Increment the nonce of `alice` again. */
-	/* TODO: Execute another balance transfer, this time from `alice` to `charlie` for 20. */
-    runtime.system.inc_nonce(&"alice".to_string());
-    let _res = runtime.balances.transfer(&"alice".to_string(), &"charlie".to_string(), 20).map_err(|e| eprintln!("{}", e));
+    // Initialize the system with some initial balance.
+	runtime.balances.set_balance(&alice, 100);
 
 
-    println!("{:#?}", runtime);
+    let first_transfer = support::Extrinsic {
+        caller: alice,
+        call: RuntimeCall::BalancesTransfer { to: bob, amount: 10 },
+    };
+
+    let block_1 = types::Block {
+        header: support::Header { block_number: 1 },
+        extrinsics: vec![
+            first_transfer
+        ],
+    };
+
+
+    let _ = runtime.execute_block(block_1).expect("invalid block");
+
+	println!("{:#?}", runtime);
 }
