@@ -19,6 +19,7 @@ mod types {
 // These are all the calls which are exposed to the world.
 // Note that it is just an accumulation of the calls exposed by each module.
 pub enum RuntimeCall {
+    Balances(balances::Call<Runtime>),
     BalancesTransfer { to: types::AccountId, amount: types::Balance },
 }
 
@@ -78,7 +79,10 @@ impl support::Dispatch for Runtime {
         match call {
             RuntimeCall::BalancesTransfer { to, amount } => {
                 self.balances.transfer(&caller, &to, amount)?;
-            }
+            },
+            RuntimeCall::Balances(call) => {
+                self.balances.dispatch(caller, call)?;
+            },
         }
         Ok(())
     }
@@ -99,7 +103,7 @@ fn main() {
 
     let first_transfer = support::Extrinsic {
         caller: alice,
-        call: RuntimeCall::BalancesTransfer { to: bob, amount: 10 },
+        call: RuntimeCall::Balances(balances::Call::Transfer { to: bob, amount: 10 }),
     };
 
     let block_1 = types::Block {
