@@ -1,6 +1,7 @@
 mod balances;
 mod system;
 mod support;
+mod proof_of_existence;
 
 use crate::support::Dispatch;
 
@@ -14,12 +15,14 @@ mod types {
     pub type Extrinsic = support::Extrinsic<AccountId, RuntimeCall>;
     pub type Header = support::Header<BlockNumber>;
     pub type Block = support::Block<Header, Extrinsic>;
+    pub type content = &'static str;
 }
 
 // These are all the calls which are exposed to the world.
 // Note that it is just an accumulation of the calls exposed by each module.
 pub enum RuntimeCall {
     Balances(balances::Call<Runtime>),
+    ProofOfExistence(proof_of_existence::Call<Runtime>),
     BalancesTransfer { to: types::AccountId, amount: types::Balance },
 }
 
@@ -29,12 +32,13 @@ pub enum RuntimeCall {
 pub struct Runtime {
     system: system::Pallet<Self>,
     balances: balances::Pallet<Self>,
+    proof_of_existance: proof_of_existence::Pallet<Self>,
 }
 
 impl Runtime {
 	// Create a new instance of the main Runtime, by creating a new instance of each pallet.
 	fn new() -> Self {
-		Self { system: system::Pallet::new(), balances: balances::Pallet::new() }
+		Self { system: system::Pallet::new(), balances: balances::Pallet::new(), proof_of_existance: proof_of_existence::Pallet::new() }
 	}
 
     // Execute a block of extrinsics. Increments the block number.
@@ -71,6 +75,10 @@ impl balances::Config for Runtime {
     type Balance = types::Balance;
 }
 
+impl proof_of_existence::Config for Runtime {
+    type Content = types::content;
+}
+
 impl support::Dispatch for Runtime {
     type Caller = <Runtime as system::Config>::AccountId;
     type Call = RuntimeCall;
@@ -83,6 +91,9 @@ impl support::Dispatch for Runtime {
             RuntimeCall::Balances(call) => {
                 self.balances.dispatch(caller, call)?;
             },
+            RuntimeCall::ProofOfExistence(call) => {
+                self.proof_of_existance.dispatch(caller, call)?;
+            }
         }
         Ok(())
     }
@@ -102,14 +113,20 @@ fn main() {
 
 
     let first_transfer = support::Extrinsic {
-        caller: alice,
+        caller: alice.clone(),
         call: RuntimeCall::Balances(balances::Call::Transfer { to: bob, amount: 10 }),
+    };
+
+    let claim_item = support::Extrinsic {
+        caller: alice.clone(),
+        call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim { content: "messi" }),
     };
 
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
         extrinsics: vec![
-            first_transfer
+            first_transfer,
+            claim_item
         ],
     };
 
